@@ -287,6 +287,7 @@ func (i *issueRepository) FindByID(ctx context.Context, id string) (*models.Issu
 	err := i.db.
 		WithContext(ctx).
 		Preload("Scope").
+		Preload("Links").
 		Preload("RelatedFrom.Target.Scope").
 		Preload("RelatedTo.Source.Scope").
 		First(&issue, "id = ?", id).Error
