@@ -1,9 +1,12 @@
 package http
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	kiteConf "github.com/konflux-ci/kite/internal/config"
 	"github.com/konflux-ci/kite/internal/middleware"
+	"github.com/konflux-ci/kite/internal/pkg/cache"
 	"github.com/konflux-ci/kite/internal/repository"
 	"github.com/konflux-ci/kite/internal/services"
 	"github.com/sirupsen/logrus"
@@ -18,6 +21,7 @@ func SetupRouter(db *gorm.DB, logger *logrus.Logger) (*gin.Engine, error) {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	cache := cache.New()
 	router := gin.New()
 
 	// Setup middleware
@@ -42,6 +46,8 @@ func SetupRouter(db *gorm.DB, logger *logrus.Logger) (*gin.Engine, error) {
 	}
 	// API v1 routes
 	v1 := router.Group("/api/v1")
+	v1.Use(middleware.Authentication(cache, 10 * time.Second, 10 * time.Second))
+	v1.Use(middleware.Impersonation(cache, 10 * time.Second, 10 * time.Second))
 
 	// Issues routes with namespace checking
 	issuesGroup := v1.Group("/issues")
