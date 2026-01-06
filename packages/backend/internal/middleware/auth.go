@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"github.com/konflux-ci/kite/internal/pkg/cache"
-	authv1 "k8s.io/api/authorization/v1"
+	"github.com/sirupsen/logrus"
 	apiAuthnv1 "k8s.io/api/authentication/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/apiserver/pkg/authentication/serviceaccount"
+	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -403,12 +403,29 @@ func (nc *NamespaceChecker) CheckNamespacessAccess() gin.HandlerFunc {
 			return
 		}
 
-		// Check if user has access to the namespace by checking if they can get pods
-		if err := nc.checkPodAccess(namespace); err != nil {
-			nc.logger.WithError(err).WithField("namespace", namespace).Warn("Access Denied")
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to this namespace"})
-			c.Abort()
-			return
+		requester, ok := c.Get("user")
+		if ok {
+			requesterInfo, okCast := requester.(*user.DefaultInfo)
+			if !okCast {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected user type in context"})
+				c.Abort()
+				return
+			}
+			// Check if user has access to the namespace by checking if they can get pods
+			if err := nc.checkUserPodAccess(namespace, requesterInfo); err != nil {
+				nc.logger.WithError(err).WithField("namespace", namespace).Warn("Access Denied")
+				c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to this namespace"})
+				c.Abort()
+				return
+			}
+		} else {
+			// Check if Kite SA has access to the namespace by checking if they can get pods
+			if err := nc.checkPodAccess(namespace); err != nil {
+				nc.logger.WithError(err).WithField("namespace", namespace).Warn("Access Denied")
+				c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to this namespace"})
+				c.Abort()
+				return
+			}
 		}
 
 		nc.logger.WithField("namespace", namespace).Debug("Access allowed")
@@ -440,11 +457,48 @@ func (nc *NamespaceChecker) checkPodAccess(namespace string) error {
 		ctx, accessReview, metav1.CreateOptions{})
 
 	if err != nil {
-		return fmt.Errorf("failed to check namespace access: %w", err)
+		return fmt.Errorf("failed to check kite namespace access: %w", err)
 	}
 
 	if !result.Status.Allowed {
-		return fmt.Errorf("access denied to namespace %s", namespace)
+		return fmt.Errorf("access denied for kite to namespace %s", namespace)
+	}
+
+	return nil
+}
+
+func (nc *NamespaceChecker) checkUserPodAccess(namespace string, requester user.Info) error {
+	if nc.client == nil {
+		return nil // Skip check if client is not available
+	}
+
+	// Create a SubjectAccessReview to check if the user can get pods in the namespace
+	accessReview := &authv1.SubjectAccessReview{
+		Spec: authv1.SubjectAccessReviewSpec{
+			User: requester.GetName(),
+			UID: requester.GetUID(),
+			Groups: requester.GetGroups(),
+			ResourceAttributes: &authv1.ResourceAttributes{
+				Namespace: namespace,
+				Verb:      "get",
+				Resource:  "pods",
+			},
+		},
+	}
+
+	// Run the access review for max 10 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := nc.client.AuthorizationV1().SubjectAccessReviews().Create(
+		ctx, accessReview, metav1.CreateOptions{})
+
+	if err != nil {
+		return fmt.Errorf("failed to check user namespace access: %w", err)
+	}
+
+	if !result.Status.Allowed {
+		return fmt.Errorf("access denied for %s to namespace %s", requester.GetName(), namespace)
 	}
 
 	return nil
