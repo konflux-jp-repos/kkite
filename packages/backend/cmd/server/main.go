@@ -84,10 +84,16 @@ func main() {
 		logger.WithFields(logrus.Fields{
 			"address":     cfg.GetServerAddress(),
 			"environment": cfg.Server.Environment,
-		}).Info("Starting HTTP Server")
+		}).Info("Starting Server")
 
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.WithError(err).Fatal("Failed to start server")
+		if projectEnv != "development" {
+			if err := server.ListenAndServeTLS("/var/tls/tls.crt", "/var/tls/tls.key"); err != nil && err != http.ErrServerClosed {
+				logger.WithError(err).Fatal("Failed to start server")
+			}
+		} else {
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				logger.WithError(err).Fatal("Failed to start server")
+			}
 		}
 	}()
 
