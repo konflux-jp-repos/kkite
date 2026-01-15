@@ -46,11 +46,11 @@ func SetupRouter(db *gorm.DB, logger *logrus.Logger) (*gin.Engine, error) {
 	}
 	// API v1 routes
 	v1 := router.Group("/api/v1")
-	v1.Use(namespaceChecker.Authentication(cache, 10 * time.Second, 10 * time.Second))
-	v1.Use(namespaceChecker.Impersonation(cache, 10 * time.Second, 10 * time.Second))
 
 	// Issues routes with namespace checking
 	issuesGroup := v1.Group("/issues")
+	issuesGroup.Use(namespaceChecker.Authentication(cache, 10 * time.Second, 10 * time.Second))
+	issuesGroup.Use(namespaceChecker.Impersonation(cache, 10 * time.Second, 10 * time.Second))
 	if namespaceChecker != nil {
 		issuesGroup.Use(namespaceChecker.CheckNamespacessAccess())
 	}
