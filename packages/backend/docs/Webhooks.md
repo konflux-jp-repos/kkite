@@ -32,6 +32,8 @@ There are two main ways to send requests:
 
 Webhook endpoints provide a simple way to create and resolve issues. They handle the complexity of issue creation, duplicate checking and automatic resolution.
 
+_Obs: Only authenticated user can post issues, so in order to post any issue the user, or service account, must send the its access token as bearer type of authentication in request_
+
 ### Example Webhook endpoints
 The following example shows webhook endpoints for Tekton Pipeline failures and successes.
 #### Pipeline Failure Webhook

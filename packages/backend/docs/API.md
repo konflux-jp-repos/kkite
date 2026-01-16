@@ -24,6 +24,15 @@ The Konflux Issues Dashboard will function like a car dashboard - a centralized 
 
 The API will use Kubernetes RBAC for namespace-based access control (**Work In Progress**). Users must have access to the Kubernetes namespace to interact with issues in that namespace.
 
+The user or service account consuming Kite API must send the `Authorization` header as bearer token where value should be its access token.
+
+```bash
+curl --request GET \
+    --url 'https://kite.service' \
+    --header 'Authorization: Bearer <access token>'
+    <COMMAND_TAIL>
+```
+
 ---
 
 ## Data Models

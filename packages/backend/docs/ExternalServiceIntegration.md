@@ -22,6 +22,7 @@ spec:
         if [ "$(params.status)" = "Failed" ]; then
           curl -X POST http://kite-api/api/v1/webhooks/pipeline-failure \
             -H "Content-Type: application/json" \
+            -H "Authorization: Bearer <access-token>" \
             -d '{
               "pipelineName": "$(params.pipeline-name)",
               "namespace": "$(context.taskRun.namespace)",
