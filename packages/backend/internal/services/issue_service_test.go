@@ -16,7 +16,7 @@ import (
 func setupServiceDependents(t *testing.T) (context.Context, *logrus.Logger, repository.IssueRepository, *gorm.DB) {
 	db := testhelpers.SetupTestDB(t)
 	logger := logrus.New()
-	repo := repository.NewIssueRepository(db, logger)
+	repo := repository.NewIssueRepository(db, logger, "test-instance")
 	ctx := context.Background()
 
 	return ctx, logger, repo, db

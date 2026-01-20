@@ -42,6 +42,7 @@ type Issue struct {
 	Severity    Severity   `gorm:"type:varchar(20);not null" json:"severity"`
 	IssueType   IssueType  `gorm:"type:varchar(20);not null" json:"issueType"`
 	State       IssueState `gorm:"type:varchar(20);default:ACTIVE" json:"state"`
+	Instance    string     `gorm:"type:varchar(20)" json:"instance"`
 	DetectedAt  time.Time  `gorm:"not null" json:"detectedAt"`
 	ResolvedAt  *time.Time `json:"resolvedAt"`
 	Namespace   string     `gorm:"not null" json:"namespace"`

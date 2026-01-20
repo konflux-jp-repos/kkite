@@ -14,6 +14,7 @@ CREATE TABLE "public"."issues" (
  "severity" character varying(20) NOT NULL,
  "issue_type" character varying(20) NOT NULL,
  "state" character varying(20) NULL DEFAULT 'ACTIVE',
+ "instance" character varying(20) NULL,
  "detected_at" timestamptz NOT NULL,
  "resolved_at" timestamptz NULL,
  "namespace" text NOT NULL,

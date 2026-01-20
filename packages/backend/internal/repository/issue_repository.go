@@ -13,8 +13,9 @@ import (
 )
 
 type issueRepository struct {
-	db     *gorm.DB
-	logger *logrus.Logger
+	db       *gorm.DB
+	logger   *logrus.Logger
+	instance string
 }
 
 // NewIssueRepository creates a new Issue repository
@@ -22,13 +23,15 @@ type issueRepository struct {
 // Parameters:
 //   - db: Pointer to a database (gorm.DB)
 //   - logger: Pointer to a logger (logrus.Logger)
+//   - instance: The instance identifier from configuration
 //
 // Returns:
 //   - IssueRepository
-func NewIssueRepository(db *gorm.DB, logger *logrus.Logger) IssueRepository {
+func NewIssueRepository(db *gorm.DB, logger *logrus.Logger, instance string) IssueRepository {
 	return &issueRepository{
-		db:     db,
-		logger: logger,
+		db:       db,
+		logger:   logger,
+		instance: instance,
 	}
 }
 
@@ -400,6 +403,7 @@ func (i *issueRepository) createNewIssueInTx(tx *gorm.DB, req dto.IssuePayload) 
 		Severity:    req.GetSeverity(),
 		IssueType:   req.GetIssueType(),
 		State:       state,
+		Instance:    i.instance,
 		DetectedAt:  now,
 		Namespace:   req.GetNamespace(),
 		Scope: models.IssueScope{

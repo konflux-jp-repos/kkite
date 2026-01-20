@@ -31,7 +31,8 @@ func SetupRouter(db *gorm.DB, logger *logrus.Logger) (*gin.Engine, error) {
 	router.Use(gin.Recovery())
 
 	// Initialize repository
-	issueRepo := repository.NewIssueRepository(db, logger)
+	instance := kiteConf.GetEnvOrDefault("KITE_INSTANCE", "")
+	issueRepo := repository.NewIssueRepository(db, logger, instance)
 	// Initialize services
 	issueService := services.NewIssueService(issueRepo, logger)
 

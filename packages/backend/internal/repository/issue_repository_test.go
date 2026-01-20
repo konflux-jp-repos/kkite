@@ -26,7 +26,7 @@ func setupTestScenario(t *testing.T, options SetupOptions) (context.Context, *go
 		db = testhelpers.SetupTestDB(t)
 	}
 	logger := logrus.New()
-	repo := NewIssueRepository(db, logger)
+	repo := NewIssueRepository(db, logger, "test-instance")
 	ctx := context.Background()
 
 	return ctx, db, repo

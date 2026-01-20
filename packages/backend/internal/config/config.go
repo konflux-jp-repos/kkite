@@ -28,6 +28,7 @@ type ServerConfig struct {
 	IdleTimeout     time.Duration
 	ShutdownTimeout time.Duration
 	Environment     string
+	Instance        string
 }
 
 // LoggingConfig holds all logging configuration
@@ -60,6 +61,7 @@ func LoadConfig() (*Config, error) {
 			IdleTimeout:     GetEnvDurationOrDefault("KITE_IDLE_TIMEOUT", 60*time.Second),
 			ShutdownTimeout: GetEnvDurationOrDefault("KITE_SHUTDOWN_TIMEOUT", 10*time.Second),
 			Environment:     getEnvOrDefault("KITE_PROJECT_ENV", "production"),
+			Instance:        GetEnvOrDefault("KITE_INSTANCE", ""),
 		},
 		Database: DatabaseConfig{
 			Host:     GetEnvOrDefault("KITE_DB_HOST", "localhost"),
